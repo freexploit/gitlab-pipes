@@ -39,3 +39,4 @@
       packages.default = flake.packages."gitlab-pipes:exe:gitlab-pipes";
     });
 }
+
