@@ -22,7 +22,7 @@
               };
               # Non-Haskell shell tools go here
               shell.buildInputs = with pkgs; [
-                nixpkgs-fmt
+                nixpkgs-fmt stylish-haskell
               ];
               # This adds `js-unknown-ghcjs-cabal` to the shell.
               # shell.crossPlatforms = p: [p.ghcjs];
