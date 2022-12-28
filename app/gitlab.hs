@@ -1,6 +1,10 @@
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Gitlab  where
 
 import Data.Aeson
+import           Network.HTTP.Simple
 
 data GitlabPipeline = GitlabPipeline
     { id         :: Int
@@ -20,6 +24,6 @@ instance ToJSON GitlabPipeline
 
 
 getPipelines :: Request -> IO [GitlabPipeline]
-getPipelines request' = do 
-    response <- httpJSON  request' 
+getPipelines request' = do
+    response <- httpJSON  request'
     return $ getResponseBody response

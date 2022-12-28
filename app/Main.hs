@@ -1,17 +1,18 @@
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 
 module Main where
-import Gitlab
+
 import           Control.Monad.IO.Class
 import           Data.Aeson
 import qualified Data.ByteString.Char8  as BC
+import           Data.Text
 import           GHC.Generics
+import           Gitlab
 import           Network.HTTP.Simple
 import qualified Network.HTTP.Types     as HT
 import           Options.Applicative
-import Data.Text
 
 data Args = Args
     { project     :: String
