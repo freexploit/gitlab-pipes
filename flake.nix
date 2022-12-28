@@ -13,6 +13,7 @@
             final.haskell-nix.project' {
               src = ./.;
               compiler-nix-name = "ghc925";
+              index-state = "2022-12-13T00:00:00Z";
               # This is used by `nix develop .` to open a shell for use with
               # `cabal`, `hlint` and `haskell-language-server`
               shell.tools = {

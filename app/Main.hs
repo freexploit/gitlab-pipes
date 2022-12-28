@@ -4,14 +4,9 @@
 
 module Main where
 
-import           Control.Monad.IO.Class
-import           Data.Aeson
 import qualified Data.ByteString.Char8  as BC
-import           Data.Text
-import           GHC.Generics
 import           Gitlab
 import           Network.HTTP.Simple
-import qualified Network.HTTP.Types     as HT
 import           Options.Applicative
 
 data Args = Args
@@ -51,6 +46,7 @@ argParser = Args
         <> metavar "SERVER_URL"
         <> help "Gitlab Server URL"
         )
+    
 
 request :: Args -> Request
 request (Args project_id'  token server_url ) =
