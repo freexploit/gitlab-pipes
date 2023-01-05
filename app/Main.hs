@@ -4,7 +4,7 @@
 
 module Main where
 
-import qualified Data.ByteString.Char8  as BC
+import qualified Data.ByteString.Char8    as BC
 import           Gitlab
 import           Network.HTTP.Simple
 import           Options.Applicative
@@ -13,22 +13,10 @@ data Args = Args
     { project     :: String
     , serverl_url :: String
     , pToken      :: String
+    , reference   :: String
+    , latest      :: Bool
+    , perPage     :: Int
     }
-
---
---  {
-    --"id": 47,
-    --"iid": 12,
-    --"project_id": 1,
-    --"status": "pending",
-    --"source": "push",
-    --"ref": "new-pipeline",
-    --"sha": "a91957a858320c0e17f3a0eca7cfacbff50ea29a",
-    --"web_url": "https://example.com/foo/bar/pipelines/47",
-    --"created_at": "2016-08-11T11:28:34.085Z",
-    --"updated_at": "2016-08-11T11:32:35.169Z"
-  --}
---
 
 argParser :: Parser Args
 argParser = Args
@@ -46,12 +34,34 @@ argParser = Args
         <> metavar "SERVER_URL"
         <> help "Gitlab Server URL"
         )
-    
+    <*> strOption
+        (long "reference"
+        <> showDefault
+        <> value "main"
+        <> metavar "REFERENCE"
+        <> help "Git reference"
+        )
+    <*> switch (long "latest" <> help "Only show latest pipeline")
+    <*> option auto
+        (long "perPage"
+        <> showDefault
+        <> value 3
+        <> metavar "PERPAGE"
+        <> help "How many pipelines want to show"
+        )
+
+
 
 request :: Args -> Request
-request (Args project_id'  token server_url ) =
-    buildRequest (BC.pack token) (BC.pack server_url)  "GET" ("/api/v4/projects/" <> (BC.pack project_id') <> "/pipelines")
+request (Args project_id'  token server_url ref' latest' perPage') =
+    addToRequestQueryString [("ref", Just $ BC.pack ref')]
+    $  addToRequestQueryString [("per_page", Just $ BC.pack $ show perPage')]
+    $  buildRequest (BC.pack token) (BC.pack server_url)  "GET" ("/api/v4/projects/" <> (BC.pack project_id') <> "/pipelines" <> isLatest latest' )
+        where
+            isLatest lts = if lts then "/latest" else "/"
 
+latestPipe :: Args -> Bool
+latestPipe (Args _  _ _ _ latest' _) =  latest'
 
 buildRequest :: BC.ByteString -> BC.ByteString ->  BC.ByteString -> BC.ByteString -> Request
 buildRequest token host method path = setRequestMethod method
@@ -65,14 +75,11 @@ buildRequest token host method path = setRequestMethod method
 
 main :: IO ()
 main = execParser opts >>= \args ->
-    do
-       pipelines <- getPipelines $ request args
-       print pipelines
-        --let status = getResponseStatus response
-       --liftIO $ print $ getResponseBody response
-
+        if latestPipe args then
+           getLatestPipeline  (request args ) >>= \pipeline ->  print pipeline
+        else
+           getPipelines  (request args) >>= \pipelines -> print pipelines
     where
-      --checkStatus st@(HT.Status sc _) = sc == 200
       opts = info (argParser <**> helper )
         ( fullDesc
         <> progDesc "Get gitlab stuff"

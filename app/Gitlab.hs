@@ -119,7 +119,21 @@ instance FromJSON GitlabPipelineScope where
 instance ToJSON GitlabPipelineScope
 
 
+data GitlabPipelineResponses 
+    = SinglePipeline GitlabPipeline
+    | MultiplePipelines [GitlabPipeline]
+    deriving(Show, Generic)
+
+instance ToJSON GitlabPipelineResponses
+instance FromJSON GitlabPipelineResponses
+    
+
 getPipelines :: Request -> IO [GitlabPipeline]
 getPipelines request' = do
+    response <- httpJSON  request'
+    return $ getResponseBody response
+
+getLatestPipeline :: Request -> IO GitlabPipeline
+getLatestPipeline request' = do
     response <- httpJSON  request'
     return $ getResponseBody response
