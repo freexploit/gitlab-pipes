@@ -75,9 +75,6 @@ buildRequest token host method path = setRequestMethod method
 
 main :: IO ()
 main = execParser opts >>= \args ->
-        if latestPipe args then
-           getLatestPipeline  (request args ) >>= \pipeline ->  print pipeline
-        else
            getPipelines  (request args) >>= \pipelines -> print pipelines
     where
       opts = info (argParser <**> helper )
