@@ -3,8 +3,10 @@
 
 module Gitlab  where
 
+import           Control.Applicative
 import           Data.Aeson
 import           Data.Text
+import Data.Vector as V
 import           Data.Time.Clock     (UTCTime)
 import           GHC.Generics
 import           Network.HTTP.Simple
@@ -45,9 +47,9 @@ instance ToJSON GitlabPipelineStatus
 -- push, web, trigger, schedule, api, external, pipeline, chat, webide, merge_request_event, external_pull_request_event, parent_pipeline, ondemand_dast_scan, or ondemand_dast_validation.
 --
 
-data GitlabPipelineSource 
-    = Push 
-    | Web 
+data GitlabPipelineSource
+    = Push
+    | Web
     | Trigger
     | Schedule
     | Api
@@ -64,7 +66,7 @@ data GitlabPipelineSource
 
 
 instance FromJSON GitlabPipelineSource where
-    parseJSON (String "push") = pure Push 
+    parseJSON (String "push") = pure Push
     parseJSON (String "web") =  pure Web
     parseJSON (String "trigger") =  pure Trigger
     parseJSON (String "schedule") = pure Schedule
@@ -93,42 +95,68 @@ data GitlabPipeline = GitlabPipeline
     , web_url    :: Text
     , created_at :: UTCTime
     , updated_at :: UTCTime
-    } deriving(Show, Generic)
-
+    } deriving(Show,Generic)
 instance FromJSON GitlabPipeline
-instance ToJSON GitlabPipeline
-
 -- 	The scope of pipelines, one of: running, pending, finished, branches, tags
-data GitlabPipelineScope 
-    = ScopeRunning 
-    | ScopePending 
-    | ScopeFinished 
-    | ScopeBranches 
-    | ScopeTags 
+data GitlabPipelineScope
+    = ScopeRunning
+    | ScopePending
+    | ScopeFinished
+    | ScopeBranches
+    | ScopeTags
     deriving(Show, Generic)
 
 
 instance FromJSON GitlabPipelineScope where
-    parseJSON (String "running") = pure ScopeRunning 
-    parseJSON (String "pending") = pure ScopePending 
-    parseJSON (String "finished" ) = pure ScopeFinished 
-    parseJSON (String "branches") = pure ScopeBranches 
-    parseJSON (String "tags") = pure ScopeTags 
-    parseJSON _ = fail "Unable to parse"
+    parseJSON (String "running")   = pure ScopeRunning
+    parseJSON (String "pending")   = pure ScopePending
+    parseJSON (String "finished" ) = pure ScopeFinished
+    parseJSON (String "branches")  = pure ScopeBranches
+    parseJSON (String "tags")      = pure ScopeTags
+    parseJSON _                    = fail "Unable to parse"
 
 instance ToJSON GitlabPipelineScope
 
+--data GitlabPipeline = GitlabPipeline
+    --{ id         :: Int
+    --, iid        :: Int
+    --, project_id :: Int
+    --, status     :: GitlabPipelineStatus
+    --, source     :: GitlabPipelineSource
+    --, ref        :: Text
+    --, sha        :: Text
+    --, web_url    :: Text
+    --, created_at :: UTCTime
+    --, updated_at :: UTCTime
+    --} deriving(Show, Generic)
 
-data GitlabPipelineResponses 
-    = SinglePipeline GitlabPipeline
-    | MultiplePipelines [GitlabPipeline]
-    deriving(Show, Generic)
-
-instance ToJSON GitlabPipelineResponses
-instance FromJSON GitlabPipelineResponses
+data GitlabPipelineResponse  
+    = Single GitlabPipeline
+    | Multi [GitlabPipeline]
+    deriving(Show,Generic)
     
 
-getPipelines :: Request -> IO [GitlabPipeline]
+
+
+instance FromJSON GitlabPipelineResponse where
+    parseJSON v' = withObject "Single" (\o -> Single <$> parseObject o) v' <|> withArray "Multi" (\a -> Multi . V.toList <$> traverse parseJSON a) v'
+        where
+        parseObject v = GitlabPipeline 
+            <$>  v .: "id"
+            <*>  v .: "iid"
+            <*>  v .: "project_id"
+            <*>  v .: "status"
+            <*>  v .: "source"
+            <*>  v .: "ref"
+            <*>  v .: "sha"
+            <*>  v .: "web_url"
+            <*>  v .: "created_at"
+            <*>  v .: "updated_at"
+
+
+
+
+getPipelines :: Request -> IO GitlabPipeline
 getPipelines request' = do
     response <- httpJSON  request'
     return $ getResponseBody response
