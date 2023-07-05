@@ -156,12 +156,12 @@ instance FromJSON GitlabPipelineResponse where
 
 
 
-getPipelines :: Request -> IO GitlabPipeline
+getPipelines :: Request -> IO GitlabPipelineResponse
 getPipelines request' = do
     response <- httpJSON  request'
     return $ getResponseBody response
 
-getLatestPipeline :: Request -> IO GitlabPipeline
+getLatestPipeline :: Request -> IO GitlabPipelineResponse
 getLatestPipeline request' = do
     response <- httpJSON  request'
     return $ getResponseBody response
