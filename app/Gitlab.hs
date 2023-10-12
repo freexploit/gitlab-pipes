@@ -130,18 +130,18 @@ instance ToJSON GitlabPipelineScope
     --, updated_at :: UTCTime
     --} deriving(Show, Generic)
 
-data GitlabPipelineResponse  
+data GitlabPipelineResponse
     = Single GitlabPipeline
     | Multi [GitlabPipeline]
     deriving(Show,Generic)
-    
+
 
 
 
 instance FromJSON GitlabPipelineResponse where
     parseJSON v' = withObject "Single" (\o -> Single <$> parseObject o) v' <|> withArray "Multi" (\a -> Multi . V.toList <$> traverse parseJSON a) v'
         where
-        parseObject v = GitlabPipeline 
+        parseObject v = GitlabPipeline
             <$>  v .: "id"
             <*>  v .: "iid"
             <*>  v .: "project_id"
@@ -158,10 +158,5 @@ instance FromJSON GitlabPipelineResponse where
 
 getPipelines :: Request -> IO GitlabPipelineResponse
 getPipelines request' = do
-    response <- httpJSON  request'
-    return $ getResponseBody response
-
-getLatestPipeline :: Request -> IO GitlabPipelineResponse
-getLatestPipeline request' = do
     response <- httpJSON  request'
     return $ getResponseBody response
